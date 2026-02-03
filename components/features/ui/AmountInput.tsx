@@ -11,6 +11,7 @@ interface AmountInputProps {
     showBalance?: boolean;
     tokenIcon?: string;
     readOnly?: boolean;
+    disabled?: boolean;
 }
 
 export function AmountInput({
@@ -24,6 +25,7 @@ export function AmountInput({
     showBalance = false,
     tokenIcon = "/ethereum-eth.svg",
     readOnly = false,
+    disabled = false,
 }: AmountInputProps) {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,14 +52,15 @@ export function AmountInput({
                     </div>
                     <input
                         type="text"
-                        className="bg-transparent border-none outline-none text-2xl font-medium text-white placeholder-zinc-600 w-full min-w-0"
+                        className={`bg-transparent border-none outline-none text-2xl font-medium placeholder-zinc-600 w-full min-w-0 ${disabled ? 'text-zinc-500 cursor-not-allowed' : 'text-white'}`}
                         placeholder={placeholder}
                         value={value}
                         onChange={handleInputChange}
                         readOnly={readOnly}
+                        disabled={disabled}
                     />
                 </div>
-                {onMax && !readOnly && (
+                {onMax && !readOnly && !disabled && (
                     <button
                         onClick={onMax}
                         className="text-xs font-bold text-[#cc7a0e] bg-[#cc7a0e]/10 border border-[#cc7a0e]/20 px-3 py-1.5 rounded-lg hover:bg-[#cc7a0e]/20 transition-colors uppercase tracking-wide cursor-pointer ml-3 shrink-0"
