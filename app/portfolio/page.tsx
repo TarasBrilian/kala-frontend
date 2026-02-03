@@ -56,8 +56,8 @@ export default function PortfolioPage() {
     const isLoading = positionLoading || kalaLoading || healthLoading;
 
     // Calculate USD values if prices available
-    const ethUsd = prices ? Number(formatUnits(prices.ethUsdPrice, 8)) : null;
-    const kalaUsd = prices ? Number(formatUnits(prices.kalaUsdPrice, 8)) : null;
+    const ethUsd = prices ? Number(formatUnits(prices.ethUsdPrice, 18)) : null;
+    const kalaUsd = prices ? Number(formatUnits(prices.kalaUsdPrice, 18)) : null;
 
     // Determine repay status for current position
     const hasDebt = position && position.debt > 0n;
@@ -249,10 +249,10 @@ export default function PortfolioPage() {
                                 onClick={() => router.push('/withdraw')}
                                 disabled={!hasDebt && !hasWithdrawable}
                                 className={`w-full py-3 px-4 rounded-xl font-medium transition-all flex items-center justify-between ${hasDebt
-                                        ? "bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20"
-                                        : hasWithdrawable
-                                            ? "bg-green-500/10 border border-green-500/30 text-green-400 hover:bg-green-500/20"
-                                            : "bg-white/5 border border-white/10 text-zinc-500 cursor-not-allowed"
+                                    ? "bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20"
+                                    : hasWithdrawable
+                                        ? "bg-green-500/10 border border-green-500/30 text-green-400 hover:bg-green-500/20"
+                                        : "bg-white/5 border border-white/10 text-zinc-500 cursor-not-allowed"
                                     }`}
                             >
                                 <span>{hasDebt ? "Repay Debt" : hasWithdrawable ? "Claim ETH" : "No Actions"}</span>
