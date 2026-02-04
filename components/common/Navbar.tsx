@@ -9,9 +9,10 @@ import { useDisconnect } from 'wagmi';
 import { usePathname } from "next/navigation";
 
 const NAV_ITEMS = [
-    { label: 'Stake', href: '/' },
+    { label: 'Stake', href: '/stake' },
     { label: 'Portfolio', href: '/portfolio' },
-    { label: 'Operators', href: '#' },
+    { label: 'Operators', href: '/operators' },
+    { label: 'Earn', href: '/earn' },
 ];
 
 function WalletMenu({
@@ -166,6 +167,7 @@ export default function Navbar() {
                     ))}
                 </div>
             </div>
+
 
             <ConnectButton.Custom>
                 {({

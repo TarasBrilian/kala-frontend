@@ -1,8 +1,17 @@
 import { sepolia } from "wagmi/chains";
 import { KalaMoney } from "@/abis/KalaMoneyAbi";
+import { KalaHookAbi } from "@/abis/KalaHookAbi";
 
 export const KALA_MONEY_ADDRESS = {
     [sepolia.id]: "0xAF53484b277e9b7e9Fb224D2e534ee9beB68B7BA",
+} as const;
+
+export const KALA_HOOK_ADDRESS = {
+    [sepolia.id]: "0x3485cE0473ABcefAFF025aa7aCed6438d3d84080",
+} as const;
+
+export const UNISWAP_V4_POOL_MANAGER = {
+    [sepolia.id]: "0xE03A1074c86CFeDd5C142C4F04F1a1536e203543",
 } as const;
 
 export const KALA_DEPLOYMENT_BLOCK = {
@@ -12,6 +21,12 @@ export const KALA_DEPLOYMENT_BLOCK = {
 export const kalaMoneyConfig = {
     address: KALA_MONEY_ADDRESS[sepolia.id] as `0x${string}`,
     abi: KalaMoney,
+    chainId: sepolia.id,
+} as const;
+
+export const kalaHookConfig = {
+    address: KALA_HOOK_ADDRESS[sepolia.id] as `0x${string}`,
+    abi: KalaHookAbi,
     chainId: sepolia.id,
 } as const;
 
