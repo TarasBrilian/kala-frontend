@@ -31,6 +31,9 @@ export default function WithdrawCard() {
     const [activeTab, setActiveTab] = useState<Tab>("repay");
     const [repayAmount, setRepayAmount] = useState<string>("");
     const [withdrawAmount, setWithdrawAmount] = useState<string>("");
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [successTitle, setSuccessTitle] = useState("");
+    const [successTxHash, setSuccessTxHash] = useState<string | null>(null);
 
     // Position and balance data
     const { position, refetch: refetchPosition } = useUserPosition();
@@ -44,6 +47,7 @@ export default function WithdrawCard() {
         isConfirming: repayConfirming,
         isSuccess: repaySuccess,
         error: repayError,
+        txHash: repayTxHash,
         reset: resetRepay,
         canRepay,
         currentDebt,
@@ -76,21 +80,49 @@ export default function WithdrawCard() {
         validationError: claimValidation,
     } = useClaim();
 
-    // Refetch data on transaction success
+    // Refetch data on transaction success and show modal
     useEffect(() => {
-        if (repaySuccess || withdrawSuccess || claimSuccess) {
+        if (repaySuccess && repayTxHash) {
+            setSuccessTitle("Repay Successful!");
+            setSuccessTxHash(repayTxHash);
+            setShowSuccessModal(true);
+            setRepayAmount("");
             refetchPosition();
             refetchBalance();
-            // Reset inputs after short delay
-            setTimeout(() => {
-                setRepayAmount("");
-                setWithdrawAmount("");
-                resetRepay();
-                resetWithdraw();
-                resetClaim();
-            }, 3000);
+            setTimeout(() => resetRepay(), 3000);
         }
-    }, [repaySuccess, withdrawSuccess, claimSuccess, refetchPosition, refetchBalance, resetRepay, resetWithdraw, resetClaim]);
+    }, [repaySuccess, repayTxHash, refetchPosition, refetchBalance, resetRepay]);
+
+    useEffect(() => {
+        if (withdrawSuccess) {
+            setSuccessTitle("Withdrawal Requested!");
+            setSuccessTxHash(null); // useWithdraw doesn't currently export hash, but we show success
+            setShowSuccessModal(true);
+            setWithdrawAmount("");
+            refetchPosition();
+            setTimeout(() => resetWithdraw(), 3000);
+        }
+    }, [withdrawSuccess, refetchPosition, resetWithdraw]);
+
+    useEffect(() => {
+        if (claimSuccess) {
+            setSuccessTitle("ETH Claimed!");
+            setSuccessTxHash(null);
+            setShowSuccessModal(true);
+            refetchPosition();
+            setTimeout(() => resetClaim(), 3000);
+        }
+    }, [claimSuccess, refetchPosition, resetClaim]);
+
+    // Independent auto-dismiss timer
+    useEffect(() => {
+        if (showSuccessModal) {
+            const timer = setTimeout(() => {
+                setShowSuccessModal(false);
+            }, 4000);
+            return () => clearTimeout(timer);
+        }
+    }, [showSuccessModal]);
 
     // Determine which tab should be active/available
     const hasDebt = currentDebt > 0n;
@@ -112,6 +144,7 @@ export default function WithdrawCard() {
     };
 
     const handleWithdrawMax = () => {
+        if (currentDebt > 0n) return;
         setWithdrawAmount(formatAmount(collateralETH));
     };
 
@@ -168,7 +201,47 @@ export default function WithdrawCard() {
     const claimButton = getClaimButtonState();
 
     return (
-        <div className="w-full max-w-md mx-auto">
+        <div className="w-full max-w-md mx-auto relative">
+            <AnimatePresence>
+                {showSuccessModal && (
+                    <motion.div
+                        initial={{ opacity: 0, x: 20, y: 0 }}
+                        animate={{ opacity: 1, x: 0, y: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        className="fixed top-24 right-4 z-[100]"
+                    >
+                        <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-4 w-72 shadow-2xl space-y-3">
+                            <div className="flex items-center gap-3">
+                                <div className="flex items-center justify-center w-8 h-8 bg-green-500/10 rounded-full shrink-0">
+                                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-sm font-bold text-zinc-100">{successTitle}</h3>
+                                    <p className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">KALA Money Protocol</p>
+                                </div>
+                                <button
+                                    onClick={() => setShowSuccessModal(false)}
+                                    className="text-zinc-500 hover:text-zinc-300 transition-colors"
+                                >
+                                    ×
+                                </button>
+                            </div>
+                            {successTxHash && (
+                                <a
+                                    href={`https://sepolia.etherscan.io/tx/${successTxHash}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 py-2 px-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-[10px] font-mono text-[#cc7a0e] transition-colors"
+                                >
+                                    <ExternalLink className="w-3 h-3" />
+                                    {successTxHash.slice(0, 8)}...{successTxHash.slice(-6)}
+                                </a>
+                            )}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             <h1 className="text-xl font-medium text-center text-zinc-100 mb-8">Withdrawals</h1>
 
             {/* Tab navigation */}
@@ -206,11 +279,18 @@ export default function WithdrawCard() {
                         >
                             {/* Debt info banner */}
                             {hasDebt && (
-                                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 mb-6 flex items-center justify-between">
+                                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 mb-4 flex items-center justify-between">
                                     <span className="text-red-400 text-sm">Outstanding Debt</span>
                                     <span className="text-red-400 font-mono font-bold">{formatAmount(currentDebt)} KALA</span>
                                 </div>
                             )}
+                            <div className="flex items-center gap-2 mb-4">
+                                <Clock className="w-4 h-4 text-yellow-400/70 flex-shrink-0" />
+                                <span className="text-yellow-400/70 text-xs">
+                                    After full repayment, you must wait 3 days before claiming.
+                                    {withdrawTimeRemaining > 0 && ` Current wait: ${formatTimeRemaining(withdrawTimeRemaining)} remaining.`}
+                                </span>
+                            </div>
 
                             <div className="space-y-2 mb-8">
                                 <AmountInput
@@ -266,13 +346,7 @@ export default function WithdrawCard() {
                                         <AlertCircle className="w-4 h-4 text-yellow-400 flex-shrink-0" />
                                         <span className="text-yellow-400 text-sm font-medium">Outstanding debt: {formatAmount(currentDebt)} KALA</span>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <Clock className="w-4 h-4 text-yellow-400/70 flex-shrink-0" />
-                                        <span className="text-yellow-400/70 text-xs">
-                                            After full repayment, you must wait 3 days before claiming.
-                                            {withdrawTimeRemaining > 0 && ` Current wait: ${formatTimeRemaining(withdrawTimeRemaining)} remaining.`}
-                                        </span>
-                                    </div>
+
                                 </div>
                             )}
 
@@ -338,10 +412,11 @@ export default function WithdrawCard() {
                                             onChange={setWithdrawAmount}
                                             onMax={handleWithdrawMax}
                                             placeholder="0.0"
-                                            disabled={isWithdrawLoading}
+                                            disabled={isWithdrawLoading || currentDebt > 0n}
                                         />
                                         <div className="flex justify-between text-xs text-zinc-500 px-1">
-                                            <span>Collateral: {formatAmount(collateralETH)} ETH</span>
+                                            <span>Withdrawable: {currentDebt > 0n ? "0" : formatAmount(collateralETH)} ETH</span>
+                                            {currentDebt > 0n && <span className="text-red-400/70">Repay debt first</span>}
                                         </div>
                                     </div>
 
@@ -379,7 +454,9 @@ export default function WithdrawCard() {
                     </div>
                     <div className="flex items-center justify-between text-sm text-zinc-400">
                         <span>Collateral Locked</span>
-                        <span className="text-zinc-200 font-mono text-xs">{formatAmount(collateralETH)} ETH</span>
+                        <span className={`font-mono text-xs ${hasDebt ? "text-yellow-400/70" : "text-zinc-200"}`}>
+                            {formatAmount(collateralETH)} ETH
+                        </span>
                     </div>
                     <div className="flex items-center justify-between text-sm text-zinc-400">
                         <span>Outstanding Debt</span>
@@ -479,10 +556,10 @@ export default function WithdrawCard() {
                                                         onClick={handleClaim}
                                                         disabled={claimButton.disabled || hasDebt}
                                                         className={`px-3 py-1 text-xs font-medium rounded-md border transition-all ${hasDebt
+                                                            ? "bg-zinc-800/50 border-zinc-700/50 text-zinc-500 cursor-not-allowed"
+                                                            : claimButton.disabled
                                                                 ? "bg-zinc-800/50 border-zinc-700/50 text-zinc-500 cursor-not-allowed"
-                                                                : claimButton.disabled
-                                                                    ? "bg-zinc-800/50 border-zinc-700/50 text-zinc-500 cursor-not-allowed"
-                                                                    : "bg-green-500/10 border-green-500/30 text-green-400 hover:bg-green-500/20 cursor-pointer"
+                                                                : "bg-green-500/10 border-green-500/30 text-green-400 hover:bg-green-500/20 cursor-pointer"
                                                             }`}
                                                     >
                                                         {claimPending || claimConfirming ? (

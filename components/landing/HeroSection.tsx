@@ -47,13 +47,13 @@ export default function HeroSection() {
                         href="/stake"
                         className="group relative inline-flex h-12 items-center justify-center overflow-hidden rounded-md bg-white px-10 text-sm font-medium text-black transition-all duration-300 hover:bg-zinc-200 hover:ring-2 hover:ring-primary/20 hover:ring-offset-2 hover:ring-offset-black"
                     >
-                        Access Protocol
+                        Access App
                     </Link>
 
-                    <button className="text-sm font-medium text-zinc-400 hover:text-white transition-colors flex items-center gap-2 group">
+                    <Link href="https://github.com/kala-money/frontend/blob/main/README.md" target="_blank" className="text-sm font-medium text-zinc-400 hover:text-white transition-colors flex items-center gap-2 group">
                         Protocol Mechanics
                         <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 text-primary" />
-                    </button>
+                    </Link>
                 </motion.div>
             </div>
 

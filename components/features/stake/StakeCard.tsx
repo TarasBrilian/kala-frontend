@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowUpDown, Loader2 } from "lucide-react";
+import { ArrowUpDown, Loader2, CheckCircle2, ExternalLink } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { useAccount, useBalance } from "wagmi";
 import { formatEther, parseEther, formatUnits } from "viem";
@@ -25,6 +26,8 @@ export default function StakeCard() {
 
     const [amount, setAmount] = useState<string>("");
     const [error, setError] = useState<string | null>(null);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [successTxHash, setSuccessTxHash] = useState<string | null>(null);
 
     const MAX_LTV = 66.666666;
 
@@ -48,11 +51,28 @@ export default function StakeCard() {
     } = useDeposit();
 
     useEffect(() => {
-        if (isSuccess) {
-            setAmount("");
-            setSliderPercent(MAX_LTV);
+        if (isSuccess && txHash) {
+            setSuccessTxHash(txHash);
+            setShowSuccessModal(true);
+
+            // Reset inputs and hook state after 3s to allow "Staked!" feedback
+            setTimeout(() => {
+                setAmount("");
+                setSliderPercent(MAX_LTV);
+                reset();
+            }, 3000);
         }
-    }, [isSuccess]);
+    }, [isSuccess, txHash, reset]);
+
+    // Independent auto-dismiss timer
+    useEffect(() => {
+        if (showSuccessModal) {
+            const timer = setTimeout(() => {
+                setShowSuccessModal(false);
+            }, 4000);
+            return () => clearTimeout(timer);
+        }
+    }, [showSuccessModal]);
 
     useEffect(() => {
         if (!amount || !balanceData) {
@@ -99,6 +119,7 @@ export default function StakeCard() {
 
     const handleStake = () => {
         if (amount && parseFloat(amount) > 0) {
+            setSuccessTxHash(null);
             deposit(amount);
         }
     };
@@ -129,7 +150,47 @@ export default function StakeCard() {
     };
 
     return (
-        <div className="w-full max-w-md mx-auto">
+        <div className="w-full max-w-md mx-auto relative">
+            <AnimatePresence>
+                {showSuccessModal && (
+                    <motion.div
+                        initial={{ opacity: 0, x: 20, y: 0 }}
+                        animate={{ opacity: 1, x: 0, y: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        className="fixed top-24 right-4 z-[100]"
+                    >
+                        <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-4 w-72 shadow-2xl space-y-3">
+                            <div className="flex items-center gap-3">
+                                <div className="flex items-center justify-center w-8 h-8 bg-green-500/10 rounded-full shrink-0">
+                                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-sm font-bold text-zinc-100">Staked Successfully!</h3>
+                                    <p className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">KALA Money Protocol</p>
+                                </div>
+                                <button
+                                    onClick={() => setShowSuccessModal(false)}
+                                    className="text-zinc-500 hover:text-zinc-300 transition-colors"
+                                >
+                                    ×
+                                </button>
+                            </div>
+                            {successTxHash && (
+                                <a
+                                    href={`https://sepolia.etherscan.io/tx/${successTxHash}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 py-2 px-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-[10px] font-mono text-[#cc7a0e] transition-colors"
+                                >
+                                    <ExternalLink className="w-3 h-3" />
+                                    {successTxHash.slice(0, 8)}...{successTxHash.slice(-6)}
+                                </a>
+                            )}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             <h1 className="text-3xl -mt-10 font-bold text-center text-zinc-100 mb-2 animate-in fade-in slide-in-from-bottom-4 duration-700">Stake</h1>
             <p className="text-sm text-zinc-400 mb-2 text-center">Stake your ETH and get KALA with 0% rate</p>
             <div className="glass-card rounded-3xl p-6 shadow-2xl shadow-black/40 animate-in fade-in slide-in-from-bottom-8 duration-1000 ease-out fill-mode-backwards">

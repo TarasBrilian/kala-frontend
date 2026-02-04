@@ -53,13 +53,15 @@ export function useWithdraw(): UseWithdrawResult {
 
     const now = BigInt(Math.floor(Date.now() / 1000));
     const unlockTime = lastRepayTime + BigInt(WITHDRAWAL_DELAY);
-    const delayMet = currentDebt > 0n || now >= unlockTime;
-    const timeRemaining = currentDebt > 0n ? 0 : Math.max(0, Number(unlockTime - now));
 
-    const canWithdraw = isConnected && collateralETH > 0n;
+    // Delay only starts tracking when debt is 0. If debt > 0, delay is technically not "met"
+    const delayMet = currentDebt === 0n && now >= unlockTime;
+    const timeRemaining = currentDebt > 0n ? WITHDRAWAL_DELAY : Math.max(0, Number(unlockTime - now));
+
+    const canWithdraw = isConnected && collateralETH > 0n && currentDebt === 0n;
 
     const withdraw = (ethAmount: string) => {
-        if (!ethAmount || parseFloat(ethAmount) <= 0) {
+        if (!ethAmount || parseFloat(ethAmount) <= 0 || !canWithdraw) {
             return;
         }
 
@@ -77,6 +79,8 @@ export function useWithdraw(): UseWithdrawResult {
         validationError = "Wallet not connected";
     } else if (collateralETH === 0n) {
         validationError = "No collateral to withdraw";
+    } else if (currentDebt > 0n) {
+        validationError = "Repay debt before withdrawal";
     }
 
     return {

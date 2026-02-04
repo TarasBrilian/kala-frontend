@@ -20,6 +20,7 @@ import { useKalaHook } from "@/hooks/useKalaHook";
 import { useAddLiquidity } from "@/hooks/useAddLiquidity";
 import { KALA_HOOK_ADDRESS, kalaMoneyConfig } from "@/lib/contracts";
 import { sepolia } from "wagmi/chains";
+import Link from "next/link";
 
 const POOL_MODIFY_LIQUIDITY_TEST = "0x0C478023803a644c94c4CE1C1e7b9A087e411B0A" as const;
 
@@ -86,6 +87,16 @@ export default function EarnPage() {
             setStep("idle");
         }
     }, [isSuccess, hash]);
+
+    // Independent auto-dismiss timer
+    useEffect(() => {
+        if (showSuccessModal) {
+            const timer = setTimeout(() => {
+                setShowSuccessModal(false);
+            }, 4000);
+            return () => clearTimeout(timer);
+        }
+    }, [showSuccessModal]);
 
     const handleEthChange = (val: string) => {
         if (val === "" || /^\d*\.?\d*$/.test(val)) {
@@ -175,22 +186,22 @@ export default function EarnPage() {
 
                 <section className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
                     <h1 className="text-4xl md:text-5xl font-bold text-zinc-100">
-                        Earn &amp; <span className="text-[#cc7a0e]">on kala</span>
+                        Earn <span className="text-[#cc7a0e]">on kala</span>
                     </h1>
                     <p className="text-zinc-400 max-w-2xl mx-auto text-lg leading-relaxed">
                         The canonical liquidity layer for KALA. Provide liquidity to the oracle-aligned
                         Uniswap v4 pool to earn fees, or exit your position with minimal slippage.
                     </p>
-                    <a
+                    <Link
                         href={`https://sepolia.etherscan.io/address/${hookAddress}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900/50 border border-zinc-700 rounded-full text-xs text-zinc-400 hover:text-[#cc7a0e] hover:border-[#cc7a0e]/30 transition-colors"
                     >
-                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                        <span className="w-2 h-2 rounded-full bg-[#cc7a0e] animate-pulse" />
                         Hook: {hookAddress.slice(0, 6)}...{hookAddress.slice(-4)}
                         <ExternalLink className="w-3 h-3" />
-                    </a>
+                    </Link>
                 </section>
 
                 <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-8 duration-1000 ease-out fill-mode-backwards delay-100">
@@ -207,7 +218,7 @@ export default function EarnPage() {
                         subtext="CRE-Derived Reference"
                     />
                     <StatusCard
-                        icon={<ShieldCheck className="w-5 h-5 text-green-500" />}
+                        icon={<ShieldCheck className="w-5 h-5 text-[#cc7a0e]" />}
                         label="Dynamic Fee"
                         value={`${minFeePercent}% - ${maxFeePercent}%`}
                         subtext="Volatility Based"
@@ -426,7 +437,7 @@ export default function EarnPage() {
                     <div className="space-y-6">
                         <div className="glass-card rounded-2xl p-6 border border-white/5 space-y-4">
                             <div className="flex items-center gap-3">
-                                <Info className="w-5 h-5 text-blue-400" />
+                                <Info className="w-5 h-5 text-[#cc7a0e]" />
                                 <h3 className="font-bold text-zinc-200">Why this pool?</h3>
                             </div>
                             <p className="text-sm text-zinc-400 leading-relaxed">
@@ -443,7 +454,7 @@ export default function EarnPage() {
 
                         <div className="bg-zinc-900/50 rounded-2xl p-6 border border-white/5 space-y-4">
                             <div className="flex items-center gap-3">
-                                <ShieldCheck className="w-5 h-5 text-green-500" />
+                                <ShieldCheck className="w-5 h-5 text-[#cc7a0e]" />
                                 <h3 className="font-bold text-zinc-200">Hook Status</h3>
                             </div>
                             <div className="space-y-3 text-xs">

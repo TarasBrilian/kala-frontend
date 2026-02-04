@@ -5,6 +5,7 @@ import StabilityMetrics from "@/components/landing/StabilityMetrics";
 import YieldBufferSection from "@/components/landing/YieldBufferSection";
 import ArchitectureOverview from "@/components/landing/ArchitectureOverview";
 import EconomicTicker from "@/components/common/EconomicTicker";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -43,8 +44,8 @@ export default function Home() {
             KALA is an open protocol. All mechanics and state parameters are verifiable on-chain.
           </p>
           <div className="flex justify-center gap-8">
-            <a href="/stake" className="text-xs font-mono text-zinc-400 hover:text-white transition-colors border-b border-white/10 pb-1">Enter Protocol</a>
-            <a href="/docs" className="text-xs font-mono text-zinc-400 hover:text-white transition-colors border-b border-white/10 pb-1">Documentation</a>
+            <Link href="/stake" className="text-xs font-mono text-zinc-400 hover:text-white transition-colors border-b border-white/10 pb-1">Enter Protocol</Link>
+            <Link href="https://github.com/kala-money/frontend/blob/main/README.md" target="_blank" className="text-xs font-mono text-zinc-400 hover:text-white transition-colors border-b border-white/10 pb-1">Documentation</Link>
           </div>
         </div>
       </section>

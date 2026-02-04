@@ -174,12 +174,12 @@ export default function OperatorsPage() {
                     CRE Documentation
                 </Link>
                 <Link
-                    href="https://github.com/orgs/kala-money/repositories"
+                    href="https://github.com/kala-money/cre"
                     target="_blank"
                     className="flex items-center gap-2 text-zinc-500 hover:text-[#cc7a0e] transition-colors text-sm font-medium"
                 >
                     <LinkIcon className="w-4 h-4" />
-                    KALA Smart Contracts
+                    Run your own node
                 </Link>
             </div>
 
